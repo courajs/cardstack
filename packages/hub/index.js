@@ -5,6 +5,7 @@ const fs = require('fs');
 const Funnel = require('broccoli-funnel');
 const log = require('@cardstack/plugin-utils/logger')('hub/main');
 const BroccoliConnector = require('./broccoli-connector');
+const startHub = require('./start-hub');
 
 // TODO: move into configuration
 const defaultBranch = 'master';
@@ -36,7 +37,7 @@ module.exports = {
     this._super.apply(this, arguments);
     if (!this._active){ return; }
 
-    app.import('vendor/cardstack/generated.js');
+    // app.import('vendor/cardstack/generated.js');
 
     if (!process.env.ELASTICSEARCH_PREFIX) {
       process.env.ELASTICSEARCH_PREFIX = this.project.pkg.name.replace(/^[^a-zA-Z]*/, '').replace(/[^a-zA-Z0-9]/g, '_') + '_' + env;
@@ -58,7 +59,7 @@ module.exports = {
       let { pkg } = this.project;
       useDevDeps = !(pkg.dependencies && pkg.dependencies['@cardstack/hub']);
     }
-    this._hubMiddleware = this._makeServer(seedPath, this.project.ui, useDevDeps, env);
+    this._hubMiddleware = startHub();
   },
 
   buildError: function(error) {
@@ -73,17 +74,17 @@ module.exports = {
     }
   },
 
-  treeForVendor() {
-    if (!this._active){
-      this._super.apply(this, arguments);
-      return;
-    }
+  // treeForVendor() {
+  //   if (!this._active){
+  //     this._super.apply(this, arguments);
+  //     return;
+  //   }
 
-    return new Funnel(this._broccoliConnector.tree, {
-      srcDir: defaultBranch,
-      destDir: 'cardstack'
-    });
-  },
+  //   return new Funnel(this._broccoliConnector.tree, {
+  //     srcDir: defaultBranch,
+  //     destDir: 'cardstack'
+  //   });
+  // },
 
   // The serverMiddleware hook is well-behaved and will wait for us to
   // resolve a promise before moving on.
@@ -127,43 +128,5 @@ module.exports = {
         res.end();
       }
     });
-  },
-
-  async _makeServer(seedDir, ui, allowDevDependencies, env) {
-    log.debug("Looking for seed files in %s", seedDir);
-    let seedModels;
-    try {
-      seedModels = fs.readdirSync(seedDir).map(filename => {
-        if (/\.js/.test(filename)) {
-          log.debug("Found seed file %s", filename);
-          return require(path.join(seedDir, filename));
-        }
-      }).filter(Boolean).reduce((a,b) => a.concat(b), []);
-    } catch (err) {
-      if (ui) {
-        ui.writeWarnLine(`Unable to load your seed models (looking for ${seedDir})`);
-      } else {
-        process.stderr.write(`Unable to load your seed models (looking for ${seedDir})\n`);
-      }
-      seedModels = [];
-    }
-
-    // Without this node 7 swallows stack traces within the native
-    // promises I'm using.
-    process.on('warning', (warning) => {
-      process.stderr.write(warning.stack);
-    });
-
-    // Randomized session encryption -- this means if you restart the
-    // dev server your session gets invalidated.
-    let sessionsKey = crypto.randomBytes(32);
-
-    let koaApp = await makeServer(this.project.root, sessionsKey, seedModels, {
-      allowDevDependencies,
-      broccoliConnector: this._broccoliConnector,
-      emberConfigEnv: require(this.project.configPath())(env)
-    });
-    return koaApp.callback();
   }
-
 };
