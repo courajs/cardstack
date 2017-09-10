@@ -1,4 +1,5 @@
 const Koa = require('koa');
+const nssocket = require('nssocket');
 const { Registry, Container } = require('@cardstack/di');
 
 const logger = require('@cardstack/plugin-utils/logger');
@@ -37,6 +38,17 @@ async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
   let app = new Koa();
   app.use(httpLogging);
   app.use(container.lookup('hub:middleware-stack').middleware());
+
+  if (opts.emberConnector) {
+    console.log('WAITING FOR EMBER CONNECTION');
+    var server = nssocket.createServer(function (socket) {
+      socket.data('hello', function() {
+        console.log("WELL, HI!!!");
+      });
+    });
+    server.listen(6785);
+  }
+
   return app;
 }
 

@@ -8,12 +8,9 @@ const fs = require('fs');
 async function runServer(options, seedModels) {
   let {
     sessionsKey,
-    port,
-    allowDevDependencies
+    port
   } = options;
-  let app = await makeServer(process.cwd(), sessionsKey, seedModels, {
-    allowDevDependencies
-  });
+  let app = await makeServer(process.cwd(), sessionsKey, seedModels, options);
   app.listen(port);
   log.info("server listening on %s", port);
 }
@@ -21,6 +18,7 @@ async function runServer(options, seedModels) {
 function commandLineOptions() {
   commander
     .usage('[options] <seed-config-directory>')
+    .option('-e --ember-connector', 'Listen for a connection from ember-cli')
     .option('-p --port <port>', 'Server listen port.', 3000)
     .option('-d --allow-dev-dependencies', 'Allow the hub to load devDependencies.', 3000)
     .parse(process.argv);

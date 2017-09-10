@@ -9,9 +9,12 @@ module.exports = function() {
   spawn('docker', [
     'run',
     '-d',
+    '--rm',
     '--label', 'com.cardstack',
     '--network', 'other',
     '--publish', '3000:3000',
+    '--publish', '6785:6785',
+    '--mount', 'type=bind,src=/Users/aaron/dev/cardstack/packages/hub,dst=/hub/app/node_modules/@cardstack/hub',
     '-e', `CARDSTACK_SESSIONS_KEY=${key}`,
     'cardstack-app'
   ], {
