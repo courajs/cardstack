@@ -19,6 +19,7 @@ function commandLineOptions() {
   commander
     .usage('[options] <seed-config-directory>')
     .option('-e --ember-connector', 'Listen for a connection from ember-cli')
+    .option('-o --orchestrator', 'create & start necessary docker resources')
     .option('-p --port <port>', 'Server listen port.', 3000)
     .option('-d --allow-dev-dependencies', 'Allow the hub to load devDependencies.', 3000)
     .parse(process.argv);

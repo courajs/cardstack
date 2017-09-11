@@ -1,6 +1,7 @@
 const Koa = require('koa');
 const nssocket = require('nssocket');
 const { Registry, Container } = require('@cardstack/di');
+const orchestrate = require('./orchestrate');
 
 const logger = require('@cardstack/plugin-utils/logger');
 const log = logger('server');
@@ -34,6 +35,12 @@ async function wireItUp(projectDir, encryptionKeys, seedModels, opts = {}) {
 }
 
 async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
+  if (opts.orchestrator) {
+    await orchestrate();
+    console.log('done orchestrating');
+    process.exit(1);
+  }
+
   let container = await wireItUp(projectDir, encryptionKeys, seedModels, opts);
   let app = new Koa();
   app.use(httpLogging);
