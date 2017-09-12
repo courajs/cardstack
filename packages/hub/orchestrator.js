@@ -5,7 +5,8 @@ const NETWORK_NAME = "cardstack-network";
 
 module.exports = {
   start,
-  stop
+  stop,
+  timeout
 };
 
 async function start() {
@@ -20,6 +21,8 @@ async function start() {
 async function stop() {
   await destroyElasticsearch();
   await destroyNetwork();
+  console.log('all shut down');
+  process.exit();
 }
 
 

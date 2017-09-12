@@ -35,27 +35,30 @@ async function wireItUp(projectDir, encryptionKeys, seedModels, opts = {}) {
 }
 
 async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
+  let orchestration = Promise.resolve();
+
   if (opts.orchestrator) {
-    await orchestrator.start();
-    console.log('done orchestrating');
-    await orchestrator.stop();
-    process.exit(1);
+    orchestration = orchestrator.start();
   }
+
+  if (opts.emberConnector) {
+    console.log('WAITING FOR EMBER CONNECTION');
+    var server = nssocket.createServer(async function (socket) {
+      await orchestration;
+      socket.send('ready');
+      socket.data('shutdown', orchestrator.stop);
+    });
+    server.listen(6785);
+  }
+
+  await orchestration;
+
 
   let container = await wireItUp(projectDir, encryptionKeys, seedModels, opts);
   let app = new Koa();
   app.use(httpLogging);
   app.use(container.lookup('hub:middleware-stack').middleware());
 
-  if (opts.emberConnector) {
-    console.log('WAITING FOR EMBER CONNECTION');
-    var server = nssocket.createServer(function (socket) {
-      socket.data('hello', function() {
-        console.log("WELL, HI!!!");
-      });
-    });
-    server.listen(6785);
-  }
 
   return app;
 }
