@@ -2,9 +2,13 @@ const Koa = require('koa');
 const nssocket = require('nssocket');
 const { Registry, Container } = require('@cardstack/di');
 const orchestrator = require('./orchestrator');
+const _ = require('lodash');
+
 
 const logger = require('@cardstack/plugin-utils/logger');
 const log = logger('server');
+
+const HUB_HEARTBEAT_TIMEOUT = 7 * 1000;
 
 async function wireItUp(projectDir, encryptionKeys, seedModels, opts = {}) {
   let registry = new Registry();
@@ -45,8 +49,22 @@ async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
     console.log('WAITING FOR EMBER CONNECTION');
     var server = nssocket.createServer(async function (socket) {
       await orchestration;
-      socket.send('ready');
+
       socket.data('shutdown', orchestrator.stop);
+
+      // set up heartbeat
+      let stopLater = _.debounce(async function() {
+        await orchestration;
+        console.log('no heartbeat!! shutting down');
+        orchestrator.stop();
+      }, HUB_HEARTBEAT_TIMEOUT);
+      socket.data('heartbeat', function() {
+        console.log('heard heartbeat');
+        stopLater();
+      });
+      stopLater();
+
+      socket.send('ready');
     });
     server.listen(6785);
   }

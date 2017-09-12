@@ -4,13 +4,15 @@ const Koa = require('koa');
 const proxy = require('koa-proxy');
 const nssocket = require('nssocket');
 
+const HUB_HEARTBEAT_INTERVAL = 5 * 1000;
+
 module.exports = async function() {
   let key = crypto.randomBytes(32).toString('base64');
 
   let proc = spawn('docker', [
     'run',
     '-d',
-    // '--rm',
+    '--rm',
     '--publish', '3000:3000',
     '--publish', '6785:6785',
     '--mount', 'type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock',
@@ -33,10 +35,11 @@ module.exports = async function() {
   });
 
   console.log('hub seems ready');
-  setTimeout(function() {
-    console.log("alright, that's enough, hub. Shut it down");
-    hub.send('shutdown');
-  }, 30 * 1000);
+
+  setInterval(function() {
+    console.log('sending heartbeat');
+    hub.send('heartbeat');
+  }, HUB_HEARTBEAT_INTERVAL);
 
   let app = new Koa();
   app.use(proxy({
