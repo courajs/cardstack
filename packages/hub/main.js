@@ -48,11 +48,14 @@ async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
   if (opts.emberConnector) {
     console.log('WAITING FOR EMBER CONNECTION');
     var server = nssocket.createServer(async function (socket) {
+      console.log('connection established from ember-cli');
       await orchestration;
 
+      console.log('orchestration finished');
       socket.data('shutdown', orchestrator.stop);
 
       // set up heartbeat
+      console.log('setting up heartbeat');
       let stopLater = _.debounce(async function() {
         await orchestration;
         console.log('no heartbeat!! shutting down');
@@ -64,6 +67,7 @@ async function makeServer(projectDir, encryptionKeys, seedModels, opts = {}) {
       });
       stopLater();
 
+      console.log('sending ready');
       socket.send('ready');
     });
     server.listen(6785);

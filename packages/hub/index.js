@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const Funnel = require('broccoli-funnel');
 const log = require('@cardstack/plugin-utils/logger')('hub/main');
-const BroccoliConnector = require('./broccoli-connector');
+// const BroccoliConnector = require('./broccoli-connector');
 const startHub = require('./start-hub');
 
 // TODO: move into configuration
@@ -26,7 +26,7 @@ module.exports = {
       global.__cardstack_hub_running_in_ember_cli = true;
       this._active = true;
     }
-    this._broccoliConnector = new BroccoliConnector();
+    // this._broccoliConnector = new BroccoliConnector();
   },
 
   included(app){
@@ -62,17 +62,17 @@ module.exports = {
     this._hubMiddleware = startHub();
   },
 
-  buildError: function(error) {
-    if (this._broccoliConnector) {
-      this._broccoliConnector.buildFailed(error);
-    }
-  },
+  // buildError: function(error) {
+  //   if (this._broccoliConnector) {
+  //     this._broccoliConnector.buildFailed(error);
+  //   }
+  // },
 
-  postBuild: function(results) {
-    if (this._broccoliConnector) {
-      this._broccoliConnector.buildSucceeded(results);
-    }
-  },
+  // postBuild: function(results) {
+  //   if (this._broccoliConnector) {
+  //     this._broccoliConnector.buildSucceeded(results);
+  //   }
+  // },
 
   // treeForVendor() {
   //   if (!this._active){
