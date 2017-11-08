@@ -14,8 +14,8 @@ $ npm install @cardstack/logger
 
 ## Browser support
 
-We're not yet focusing on browser support. We may inadvertanly break it
-in the meantime, so don't rely on this for browser usage yet.
+We're focused on node logging, and temporarily removing browser logging.
+We will likely add it back in.
 
 ## Application-level (global) config
 
